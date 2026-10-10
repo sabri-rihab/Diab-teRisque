@@ -1,4 +1,4 @@
-import streamlit_app as st
+import streamlit as st
 import requests
 
 
@@ -32,14 +32,19 @@ if st.button('Prédire le risque'):
         "Age": age
     }
 
-    # response = requests.post('http://127.0.0.1:8000/predict', json=payload)
-    response = requests.post('http://fastapi:8000/predict', json=payload)
-    result = response.json()
+    try:
+        response = requests.post('http://fastapi:8000/predict', json=payload)
+        response.raise_for_status()
+        result = response.json()
 
-    if result['risk_level'] == 'High Risk':
-        st.error("🔴 RISQUE ÉLEVÉ de diabète")
-        st.markdown("**Conseils :** Consultez un endocrinologue")
+        if result['risk_level'] == 'High Risk':
+            st.markdown(" RISQUE ÉLEVÉ de diabète")
+        else:
+            st.markdown(" RISQUE FAIBLE de diabète")
 
-    else :
-        st.success("🟢 RISQUE FAIBLE de diabète")
-        st.markdown("**Conseils :** Maintenir un mode de vie sain")
+    except requests.exceptions.ConnectionError:
+        st.error("❌ Impossible de contacter l'API FastAPI (http://fastapi:8000)")
+    except requests.exceptions.HTTPError as e:
+        st.error(f"❌ Erreur API : {e} — {response.text}")
+    except requests.exceptions.JSONDecodeError:
+        st.error(f"❌ Réponse invalide de l'API : {response.status_code} — {response.text}")

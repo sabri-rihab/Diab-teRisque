@@ -40,8 +40,27 @@ services:
     networks:
       - diabete_network
 
+  airflow:
+    image: apache/airflow:2.8.0
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////airflow/airflow.db
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - airflow_data:/airflow
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "airflow db init &&
+               airflow users create --username admin --password admin
+               --firstname Admin --lastname Admin --role Admin --email admin@example.com &&
+               airflow webserver & airflow scheduler"
+    networks:
+      - diabete_network
+
 volumes:
   mlflow_data:
+  airflow_data:
 
 networks:
   diabete_network:
